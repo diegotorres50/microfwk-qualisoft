@@ -1,6 +1,5 @@
 <?php
-namespace MyProject
-;
+
 class FakeClass {
 
   protected $myVar;
