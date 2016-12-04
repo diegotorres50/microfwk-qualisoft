@@ -47,8 +47,13 @@ function autoload( $class, $dir = null ) {
 session_start();
 
 // Instantiate the app
-$settings = require __DIR__ . '/../src/settings.php';
-$app = new \Slim\App($settings);
+
+//Para inyectar dependencias mas adelante
+$app = new Slim\App(
+    new \Slim\Container(
+        include __DIR__ . '/../src/config/container.config.php'
+    )
+);
 
 // Set up dependencies
 require __DIR__ . '/../src/dependencies.php';
@@ -57,7 +62,7 @@ require __DIR__ . '/../src/dependencies.php';
 require __DIR__ . '/../src/middleware.php';
 
 // Register routes
-require __DIR__ . '/../src/routes.php';
+require __DIR__ . '/../src/routes/routes.php';
 
 // Run app
 $app->run();
