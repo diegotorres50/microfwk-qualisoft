@@ -51,7 +51,7 @@ session_start();
 //Para inyectar dependencias mas adelante
 $app = new Slim\App(
     new \Slim\Container(
-        include __DIR__ . '/../src/config/container.config.php'
+        include __DIR__ . '/../config/container.config.php'
     )
 );
 
