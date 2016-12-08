@@ -17,3 +17,13 @@ $container['logger'] = function ($c) {
     $logger->pushHandler(new Monolog\Handler\StreamHandler($settings['path'], $settings['level']));
     return $logger;
 };
+
+// config
+$container['general_config'] = function () {
+
+    $files = glob(__DIR__ . '/../config' . '/{global,development}/test/*.php', GLOB_BRACE);
+
+    $config = \Zend\Config\Factory::fromFiles($files);
+
+    return $config;
+};

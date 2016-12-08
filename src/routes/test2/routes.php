@@ -17,6 +17,13 @@ $app->group('/api', function () use ($app) {
 
         });
 
+        // Prueba con inyeccion de dependencias
+        $app->get('/getconfig', function ($request, $response, $args) {
+
+            return $response->withJson($this->general_config, 201);
+
+        });        
+
     });
 
 });
