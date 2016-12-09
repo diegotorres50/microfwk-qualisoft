@@ -46,6 +46,9 @@ function autoload( $class, $dir = null ) {
 
 session_start();
 
+$dotenv = new Dotenv\Dotenv(__DIR__ . '/../');
+$dotenv->load();
+
 // Instantiate the app
 
 //Para inyectar dependencias mas adelante
