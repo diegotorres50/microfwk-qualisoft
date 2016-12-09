@@ -15,5 +15,10 @@ return [
             'path' => __DIR__ . '/../logs/app.log',
             'level' => \Monolog\Logger::DEBUG,
         ],
+
+        // Environment var (todas las variables del archivo .env)
+        'env' => [
+            'environment' => strtolower(getenv('ENVIRONMENT')),
+        ],        
     ],
 ];

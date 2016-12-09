@@ -18,11 +18,22 @@ $app->group('/api', function () use ($app) {
         });
 
         // Prueba con inyeccion de dependencias
-        $app->get('/getconfig', function ($request, $response, $args) {
+        $app->get('/getgeneralconfig', function ($request, $response, $args) {
 
             return $response->withJson($this->general_config, 201);
 
-        });        
+        });    
+
+        // Prueba con variables de entorno
+        $app->get('/getenv', function ($request, $response, $args) {
+
+            return $response->withJson($this->env, 201);    
+
+        }); 
+
+
+
+
 
     });
 
