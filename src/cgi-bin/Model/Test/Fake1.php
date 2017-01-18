@@ -1,6 +1,8 @@
 <?php
 
-class FakeClass {
+//namespace Faky\Test;
+
+class Fake1 {
 
   protected $myVar;
 
