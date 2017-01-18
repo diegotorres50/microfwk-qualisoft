@@ -32,3 +32,13 @@ $container['general_config'] = function ($c) {
     $config = \Zend\Config\Factory::fromFiles($files);
     return $config;
 };
+
+// joshcamMysqli
+$container['mysqli'] = function ($c) {
+    $params = [];
+    $params['mysql_server'] = 'localhost';
+    $params['mysql_user'] = 'root';
+    $params['mysql_password'] = 'Colombia2006';
+    $params['mysql_database'] = 'qualisoft_dev';
+    return new JoshcamMysqli($params);
+};
