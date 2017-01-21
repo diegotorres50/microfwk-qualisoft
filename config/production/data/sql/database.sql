@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 4.5.2
+-- version 4.5.1
 -- http://www.phpmyadmin.net
 --
--- Servidor: localhost
--- Tiempo de generación: 26-12-2016 a las 19:44:37
--- Versión del servidor: 10.1.9-MariaDB
--- Versión de PHP: 5.5.30
+-- Host: localhost:3306
+-- Generation Time: Jan 21, 2017 at 09:01 PM
+-- Server version: 5.6.34
+-- PHP Version: 5.5.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -17,79 +17,63 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `qualisoft_dev`
+-- Database: `diegotor_qualisoft_prod`
 --
-CREATE DATABASE IF NOT EXISTS `qualisoft_dev` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-USE `qualisoft_dev`;
+CREATE DATABASE IF NOT EXISTS `diegotor_qualisoft_prod` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+USE `diegotor_qualisoft_prod`;
 
 DELIMITER $$
 --
--- Procedimientos
+-- Procedures
 --
 DROP PROCEDURE IF EXISTS `procedure_addRecord`$$
 CREATE DEFINER=`diego_torres`@`localhost` PROCEDURE `procedure_addRecord` (IN `param_table` VARCHAR(25), IN `param_data` TEXT)  BEGIN
 
-/* @diegotorres50: este procedimiento recibe el nombre de una tabla mysql y un texto formateado
-para armar una senetncia sql del insert de un registro
 
-param_table = nombre de la tabla donde se hara insert de un registro;
 
-param_data = texto con los datos del registro a insertar, cada campo esta compueste de:
+DECLARE _TOTAL_FILAS INT DEFAULT 0;
+DECLARE _INDEX_FILA INT DEFAULT 0;
+DECLARE _FILA VARCHAR(50);
 
-	- El nombre de la columna.
-    - El valor de la columna
-    - El tipo de dato de la columna
-    
-Cada campo debe estar separado por el caracter '&' y cada propiedad del campo debe estar separada
-por el caracter '@'
+DECLARE _COL_ID VARCHAR(50);
+DECLARE _COL_VAL VARCHAR(50);
+DECLARE _COL_TYPE VARCHAR(50);
 
-Ejemplo: id@6@integer&name@diego torres@string
-*/
+DECLARE STMT_IDS TEXT;
+DECLARE STMT_VALUES TEXT;
+DECLARE STMT_QUERY TEXT;
 
-DECLARE _TOTAL_FILAS INT DEFAULT 0; /* Cantidad de campos a insertar del registro */
-DECLARE _INDEX_FILA INT DEFAULT 0; /* Controla el orden del campo que estamos armando en el query insert */
-DECLARE _FILA VARCHAR(50); /* Apunta a la informacion de un campo y sus 3 propiedades */
+SET STMT_IDS = '';
+SET STMT_VALUES = '';
 
-DECLARE _COL_ID VARCHAR(50); /* Indica el nombre de la columna actual */
-DECLARE _COL_VAL VARCHAR(50); /* Indica el valor de la columna */
-DECLARE _COL_TYPE VARCHAR(50); /* Indica el tipo de dato de esa columna */
 
-DECLARE STMT_IDS TEXT; /* Concatena el query insert con los nombres de las columnas */
-DECLARE STMT_VALUES TEXT; /* Concatena el query insert con los valores de las columnas */
-DECLARE STMT_QUERY TEXT; /* Concatena todo el query insert para preparar su ejecucion en mysql */
-
-SET STMT_IDS = ''; /* Iniciamos valores vacios para evitar el null al concatenar */
-SET STMT_VALUES = ''; /* Iniciamos valores vacios para evitar el null al concatenar */
-
-/* Contamos cuantos campos se armaran en el query, cada campo con sus 3 propiedades
-deberia estar separado por &*/
 SET _TOTAL_FILAS = LENGTH(param_data) - LENGTH(REPLACE(param_data, '&', '')) + 1;
 
-/* Iniciamos un bucle controlado para recorrer los campos*/
+
 _LEER_FILAS: LOOP
-	
-	SET _INDEX_FILA := _INDEX_FILA + 1;	/* Controlamos la posicion del campo donde estamos*/
-    
-    /* Extraemos un campo y sus 3 propiedades */
-    SET _FILA := TRIM(SPLIT_STR(param_data, '&', _INDEX_FILA)); /*OJO, SPLIT_STR() ES UNA FUNCION CUSTOM */
-    
-    /* A cada campo extraido sacamos sus 3 propiedades */
-    SET _COL_ID = TRIM(SPLIT_STR(_FILA, '#', 1)); /* nombre de la columna */
-    SET _COL_VAL = TRIM(SPLIT_STR(_FILA, '#', 2)); /* valor de la columna */
-    SET _COL_TYPE = TRIM(SPLIT_STR(_FILA, '#', 3)); /* tipo de dato*/
-    
-    /* armamos el query */
+
+  SET _INDEX_FILA := _INDEX_FILA + 1;
+
+
+    SET _FILA := TRIM(SPLIT_STR(param_data, '&', _INDEX_FILA));
+
+
+    SET _COL_ID = TRIM(SPLIT_STR(_FILA, '#', 1));
+    SET _COL_VAL = TRIM(SPLIT_STR(_FILA, '#', 2));
+    SET _COL_TYPE = TRIM(SPLIT_STR(_FILA, '#', 3));
+
+
     SET STMT_IDS := CONCAT(STMT_IDS, '`', _COL_ID, '`', IF(_INDEX_FILA != _TOTAL_FILAS, ',', ''));
-	SET STMT_VALUES := CONCAT(STMT_VALUES, IF(_COL_TYPE = 'string', '\'', ''), _COL_VAL, IF(_COL_TYPE = 'string', '\'', ''), IF(_INDEX_FILA != _TOTAL_FILAS, ',', ''));
-    
-    /* cuando se llegue al ultimo campo detenemos el bucle*/
-	IF (_INDEX_FILA = _TOTAL_FILAS) THEN
-		LEAVE _LEER_FILAS;
-	END IF;
+  SET STMT_VALUES := CONCAT(STMT_VALUES, IF(_COL_TYPE = 'string', '\'', ''), _COL_VAL, IF(_COL_TYPE = 'string', '\'', ''), IF(_INDEX_FILA != _TOTAL_FILAS, ',', ''));
+
+
+  IF (_INDEX_FILA = _TOTAL_FILAS) THEN
+    LEAVE _LEER_FILAS;
+  END IF;
 
 END LOOP;
 
-/* armamos todo el query del insert */
+
 SET @STMT_QUERY = CONCAT(
 'INSERT INTO `', param_table,'` (',
 STMT_IDS,
@@ -97,26 +81,79 @@ STMT_IDS,
 STMT_VALUES,
 ');');
 
-/* Lo ejecutamos */
+
 PREPARE _QUERY FROM @STMT_QUERY;
 EXECUTE _QUERY;
 DEALLOCATE PREPARE _QUERY;
 
 END$$
 
+DROP PROCEDURE IF EXISTS `procedure_auth_login`$$
+CREATE DEFINER=`diego_torres`@`localhost` PROCEDURE `procedure_auth_login` (IN `_userId` VARCHAR(20), IN `_userPass` VARCHAR(20), OUT `_responseCode` INTEGER, OUT `_responseMessage` VARCHAR(200), OUT `_userName` VARCHAR(200))  BEGIN
+
+
+
+  DECLARE SUCCESS_RESPONSE_CODE INTEGER DEFAULT 1;
+    DECLARE SUCCESS_RESPONSE_MESSAGE VARCHAR(200) DEFAULT 'SUCCESS';
+
+
+  DECLARE UNSUCCESS_RESPONSE_CODE INTEGER DEFAULT 0;
+    DECLARE UNSUCCESS_RESPONSE_MESSAGE VARCHAR(200) DEFAULT 'USER NOT FOUND!';
+
+
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SET _responseCode = 0;
+        SET _responseMessage = 'PROCEDURE RETURNED SQL EXCEPTION!';
+  END;
+
+
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET _responseCode = UNSUCCESS_RESPONSE_CODE, _responseMessage = UNSUCCESS_RESPONSE_MESSAGE;
+
+
+  SELECT
+
+    SUCCESS_RESPONSE_CODE,
+
+        SUCCESS_RESPONSE_MESSAGE,
+
+    users.user_name
+
+
+  INTO
+    _responseCode,
+        _responseMessage,
+    _userName
+
+    FROM
+    users
+
+    WHERE
+    users.user_id = _userId AND
+
+        users.purged != 1 AND
+
+    users.user_pass=md5(md5(_userPass))
+
+  ORDER BY
+    users.user_id
+
+
+    LIMIT 1;
+END$$
+
 DROP PROCEDURE IF EXISTS `procedure_closeLogin`$$
 CREATE DEFINER=`diego_torres`@`localhost` PROCEDURE `procedure_closeLogin` (IN `param_login_id` BIGINT(20))  BEGIN
-	/* @diegotorres50: este procedimiento cambia el estado de la session registrada en la
-    base de datos a 'closed' para asi cerrar la sesion en el sistema*/
-    update 
-          logins     set 
-    	login_status='CLOSED',         login_notes='THIS SESSION WAS CLOSED BY USER',         login_closed=NOW()     where 
-    	login_id=param_login_id and         login_status = 'OPENED'; END$$
+
+    update
+          logins     set
+      login_status='CLOSED',         login_notes='THIS SESSION WAS CLOSED BY USER',         login_closed=NOW()     where
+      login_id=param_login_id and         login_status = 'OPENED'; END$$
 
 DROP PROCEDURE IF EXISTS `procedure_findAll`$$
 CREATE DEFINER=`diego_torres`@`localhost` PROCEDURE `procedure_findAll` (IN `_tableName` VARCHAR(28), IN `_databaseName` VARCHAR(28), IN `_search` TEXT, IN `_orderby` VARCHAR(28), IN `_offset` INT(10), IN `_rowcount` SMALLINT(3))  BEGIN
-/* @diegotorres50: este procedimiento que facilita la busqueda de resultados
-sobre una tabla y un patron de busqueda */	
+
  DECLARE finished INT DEFAULT FALSE ;
        DECLARE columnName VARCHAR ( 28 ) ;
        DECLARE stmtFields TEXT ;
@@ -135,8 +172,7 @@ sobre una tabla y un patron de busqueda */
                      stmtFields , IF ( LENGTH( stmtFields ) > 0 , ' OR' , ''  ) ,
                      ' `', _tableName ,'`.`' , columnName , '` LIKE "%' , _search , '%"'
               ) ;
-              #SET stmtFields = "users.user_id = 'diegotorres50'";
-       END LOOP;
+                     END LOOP;
 
        SET @stmtQueryForDropTable := CONCAT ( 'DROP TEMPORARY TABLE IF EXISTS `TMP_', _tableName,'`;') ;
        PREPARE stmt FROM @stmtQueryForDropTable ;
@@ -145,58 +181,22 @@ sobre una tabla y un patron de busqueda */
        SET @stmtQueryForCreateTable := CONCAT ( 'CREATE TEMPORARY TABLE IF NOT EXISTS `TMP_', _tableName,'` AS SELECT * FROM `' , _tableName , '` WHERE ' , stmtFields, ' ORDER BY ' , _orderby , ' LIMIT ' , _offset , ' , ' , _rowcount) ;
        PREPARE stmt FROM @stmtQueryForCreateTable ;
        EXECUTE stmt ;
-       
+
        SET @stmtQueryForDropTotalTable := CONCAT ( 'DROP TEMPORARY TABLE IF EXISTS `COUNT_', _tableName,'`;') ;
        PREPARE stmt FROM @stmtQueryForDropTotalTable ;
-       EXECUTE stmt ;       
-       
+       EXECUTE stmt ;
+
        SET @stmtQueryForCountTable := CONCAT ( 'CREATE TEMPORARY TABLE IF NOT EXISTS `COUNT_' , _tableName , '` AS SELECT count(*) as total FROM `' , _tableName , '` WHERE ' , stmtFields) ;
        PREPARE stmt FROM @stmtQueryForCountTable ;
-       EXECUTE stmt ;       
-       
+       EXECUTE stmt ;
+
        CLOSE columnNames ;
-
-END$$
-
-DROP PROCEDURE IF EXISTS `procedure_getLoginId`$$
-CREATE DEFINER=`diego_torres`@`localhost` PROCEDURE `procedure_getLoginId` (IN `param_login_user_id` VARCHAR(20), IN `param_login_time` DATETIME, OUT `param_login_id` BIGINT(20))  BEGIN
-/* @diegotorres50: este procedimiento devuelve el id de la sesion que se registra en la
-base de datos en el momento que un usuario inicia sesion web*/
-	select distinct(login_id) 	into param_login_id     from `logins`     where 
-		login_user_id=param_login_user_id and         login_time=param_login_time         order by login_user_id, login_time; END$$
-
-DROP PROCEDURE IF EXISTS `procedure_getUserName`$$
-CREATE DEFINER=`diego_torres`@`localhost` PROCEDURE `procedure_getUserName` (IN `_userId` VARCHAR(20), OUT `_userName` VARCHAR(200))  BEGIN
-
-	/* @diegotorres50: este procedimiento obtiene el username de un usuario
-    partiendo del id del usuario*/
-    
-	select 
-
-		users.user_name
-            
-	into _userName
-        
-	from
-         
-		users
-            
-	where    
-            
-		users.user_id = _userId
-            
-	order by
-        
-		users.user_id
-            
-	
-    LIMIT 1;    
 
 END$$
 
 DROP PROCEDURE IF EXISTS `procedure_getColumnNames`$$
 CREATE DEFINER=`diego_torres`@`localhost` PROCEDURE `procedure_getColumnNames` (IN `tableName` VARCHAR(28), IN `databaseName` VARCHAR(28), OUT `columnsAlias` VARCHAR(200))  BEGIN
-/* @diegotorres50: este procedimiento que facilita extraer los nombres de columna para una viata o tabla */	
+
  DECLARE finished INT DEFAULT FALSE ;
        DECLARE columnName VARCHAR ( 28 ) ;
        DECLARE stmtFields TEXT ;
@@ -215,42 +215,61 @@ CREATE DEFINER=`diego_torres`@`localhost` PROCEDURE `procedure_getColumnNames` (
        END LOOP;
 
        SET columnsAlias =  stmtFields;
-       
+
        CLOSE columnNames ;
+
+END$$
+
+DROP PROCEDURE IF EXISTS `procedure_getLoginId`$$
+CREATE DEFINER=`diego_torres`@`localhost` PROCEDURE `procedure_getLoginId` (IN `param_login_user_id` VARCHAR(20), IN `param_login_time` DATETIME, OUT `param_login_id` BIGINT(20))  BEGIN
+
+  select distinct(login_id)   into param_login_id     from `logins`     where
+    login_user_id=param_login_user_id and         login_time=param_login_time         order by login_user_id, login_time; END$$
+
+DROP PROCEDURE IF EXISTS `procedure_getUserName`$$
+CREATE DEFINER=`diego_torres`@`localhost` PROCEDURE `procedure_getUserName` (IN `_userId` VARCHAR(20), OUT `_userName` VARCHAR(200))  BEGIN
+
+
+
+  select
+
+    users.user_name
+
+  into _userName
+
+  from
+
+    users
+
+  where
+
+    users.user_id = _userId
+
+  order by
+
+    users.user_id
+
+
+    LIMIT 1;
 
 END$$
 
 DROP PROCEDURE IF EXISTS `procedure_setToPurge`$$
 CREATE DEFINER=`diego_torres`@`localhost` PROCEDURE `procedure_setToPurge` (IN `param_table_name` VARCHAR(28), IN `param_record_id` VARCHAR(28), IN `param_id_value` VARCHAR(28))  BEGIN
-	/*
-    @diegotorres50: este procedimiento cambia el estado de purga de registro a '1' de manera
-    que el registro se filtre en todas las consultas para ocultarlo y en otro procedimiento
-    borrarlo por completo de la tabla
-    */
-	SET @stmt = CONCAT ( 'UPDATE `' , param_table_name , '` SET `purged` = 1 WHERE `' , param_record_id , '` = ?;') ;
-	SET @_id_value = param_id_value;
+
+  SET @stmt = CONCAT ( 'UPDATE `' , param_table_name , '` SET `purged` = 1 WHERE `' , param_record_id , '` = ?;') ;
+  SET @_id_value = param_id_value;
     PREPARE _query FROM @stmt;
-	EXECUTE _query USING @_id_value;
-	DEALLOCATE PREPARE _query;      
+  EXECUTE _query USING @_id_value;
+  DEALLOCATE PREPARE _query;
 END$$
 
 --
--- Funciones
+-- Functions
 --
 DROP FUNCTION IF EXISTS `SPLIT_STR`$$
 CREATE DEFINER=`diego_torres`@`localhost` FUNCTION `SPLIT_STR` (`x` VARCHAR(255), `delim` VARCHAR(12), `pos` INT) RETURNS VARCHAR(255) CHARSET utf8 BEGIN
-/*
 
-http://blog.fedecarg.com/2009/02/22/mysql-split-string-function/
-
-SELECT SPLIT_STR('a|bb|ccc|dd', '|', 3) as third;
-
-+-------+
-| third |
-+-------+
-| ccc   |
-+-------+
-*/
 RETURN REPLACE(SUBSTRING(SUBSTRING_INDEX(x, delim, pos),
        LENGTH(SUBSTRING_INDEX(x, delim, pos -1)) + 1),
        delim, '');
@@ -267,7 +286,9 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `centers`
+-- Table structure for table `centers`
+--
+-- Creation: Jan 21, 2017 at 08:58 PM
 --
 
 DROP TABLE IF EXISTS `centers`;
@@ -283,7 +304,11 @@ CREATE TABLE `centers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Centros principales de agrupacion de informacion, son como empresas';
 
 --
--- Volcado de datos para la tabla `centers`
+-- RELATIONS FOR TABLE `centers`:
+--
+
+--
+-- Dumping data for table `centers`
 --
 
 INSERT INTO `centers` (`center_id`, `center_name`, `center_status`, `center_notes`, `center_modifiedsince`, `center_modifiedby`, `center_createdsince`, `center_createdby`) VALUES
@@ -296,7 +321,9 @@ INSERT INTO `centers` (`center_id`, `center_name`, `center_status`, `center_note
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `logins`
+-- Table structure for table `logins`
+--
+-- Creation: Jan 21, 2017 at 08:58 PM
 --
 
 DROP TABLE IF EXISTS `logins`;
@@ -314,7 +341,11 @@ CREATE TABLE `logins` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Registro de logins de usuario, conocido igual como registro de sesiones';
 
 --
--- Volcado de datos para la tabla `logins`
+-- RELATIONS FOR TABLE `logins`:
+--
+
+--
+-- Dumping data for table `logins`
 --
 
 INSERT INTO `logins` (`login_user_id`, `login_time`, `login_id`, `login_status`, `login_useragent`, `login_language`, `login_platform`, `login_origin`, `login_closed`, `login_notes`) VALUES
@@ -416,7 +447,9 @@ INSERT INTO `logins` (`login_user_id`, `login_time`, `login_id`, `login_status`,
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `system`
+-- Table structure for table `system`
+--
+-- Creation: Jan 21, 2017 at 08:58 PM
 --
 
 DROP TABLE IF EXISTS `system`;
@@ -427,7 +460,11 @@ CREATE TABLE `system` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Información general de la aplicación';
 
 --
--- Volcado de datos para la tabla `system`
+-- RELATIONS FOR TABLE `system`:
+--
+
+--
+-- Dumping data for table `system`
 --
 
 INSERT INTO `system` (`system_status`, `system_maintenance_msg`, `system_version`) VALUES
@@ -439,7 +476,9 @@ INSERT INTO `system` (`system_status`, `system_maintenance_msg`, `system_version
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `testing`
+-- Table structure for table `testing`
+--
+-- Creation: Jan 21, 2017 at 08:58 PM
 --
 
 DROP TABLE IF EXISTS `testing`;
@@ -448,10 +487,16 @@ CREATE TABLE `testing` (
   `name` varchar(45) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- RELATIONS FOR TABLE `testing`:
+--
+
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `users`
+-- Table structure for table `users`
+--
+-- Creation: Jan 21, 2017 at 08:58 PM
 --
 
 DROP TABLE IF EXISTS `users`;
@@ -479,7 +524,11 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='App users';
 
 --
--- Volcado de datos para la tabla `users`
+-- RELATIONS FOR TABLE `users`:
+--
+
+--
+-- Dumping data for table `users`
 --
 
 INSERT INTO `users` (`user_id`, `user_document`, `user_status`, `user_name`, `user_mail`, `user_pass`, `user_language`, `user_debugger`, `user_secretquestion`, `user_secretanswer`, `user_birthday`, `user_lastactivation`, `user_alloweddays`, `user_photo`, `user_role`, `user_notes`, `user_lastmovementdate`, `user_lastmovementip`, `user_lastmovementwho`, `purged`) VALUES
@@ -507,7 +556,7 @@ INSERT INTO `users` (`user_id`, `user_document`, `user_status`, `user_name`, `us
 ('user9', NULL, 'INACTIVE', '', 'user9', '74be16979710d4c4e7c6647856088456', 'es', 0, NULL, NULL, NULL, NULL, NULL, NULL, 'NONE', NULL, '2016-03-05 20:30:56', NULL, NULL, b'0');
 
 --
--- Disparadores `users`
+-- Triggers `users`
 --
 DROP TRIGGER IF EXISTS `users_before_ins_tr`;
 DELIMITER $$
@@ -524,7 +573,7 @@ DELIMITER $$
 CREATE TRIGGER `users_before_upd_tr` BEFORE UPDATE ON `users` FOR EACH ROW BEGIN
 
 if NEW.user_pass <> old.user_pass then
-	SET NEW.user_pass = MD5(MD5(NEW.user_pass)); end if;  
+  SET NEW.user_pass = MD5(MD5(NEW.user_pass)); end if;
 
 set NEW.user_lastmovementdate=now();
 END
@@ -534,7 +583,9 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `users_x_centers`
+-- Table structure for table `users_x_centers`
+--
+-- Creation: Jan 21, 2017 at 08:58 PM
 --
 
 DROP TABLE IF EXISTS `users_x_centers`;
@@ -551,7 +602,15 @@ CREATE TABLE `users_x_centers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Tabla hibrida de usuarios x empresas';
 
 --
--- Volcado de datos para la tabla `users_x_centers`
+-- RELATIONS FOR TABLE `users_x_centers`:
+--   `users_x_centers_center_id`
+--       `centers` -> `center_id`
+--   `users_x_centers_user_id`
+--       `users` -> `user_id`
+--
+
+--
+-- Dumping data for table `users_x_centers`
 --
 
 INSERT INTO `users_x_centers` (`users_x_centers_user_id`, `users_x_centers_user_name`, `users_x_centers_center_id`, `users_x_centers_center_name`, `users_x_centers_notes`, `users_x_centers_modifiedsince`, `users_x_centers_modifiedby`, `users_x_centers_createdsince`, `users_x_centers_createdby`) VALUES
@@ -560,7 +619,7 @@ INSERT INTO `users_x_centers` (`users_x_centers_user_id`, `users_x_centers_user_
 ('diegotorres50', 'GIVE ME A NAME', 'CENTRO_2', 'GIVE ME A NAME', NULL, NULL, NULL, NULL, NULL);
 
 --
--- Disparadores `users_x_centers`
+-- Triggers `users_x_centers`
 --
 DROP TRIGGER IF EXISTS `users_x_centers_BEFORE_UPDATE`;
 DELIMITER $$
@@ -592,7 +651,7 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `view_users`
+-- Stand-in structure for view `view_users`
 --
 DROP VIEW IF EXISTS `view_users`;
 CREATE TABLE `view_users` (
@@ -604,7 +663,7 @@ CREATE TABLE `view_users` (
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `view_users_x_centers`
+-- Stand-in structure for view `view_users_x_centers`
 --
 DROP VIEW IF EXISTS `view_users_x_centers`;
 CREATE TABLE `view_users_x_centers` (
@@ -617,7 +676,7 @@ CREATE TABLE `view_users_x_centers` (
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `view_users`
+-- Structure for view `view_users`
 --
 DROP TABLE IF EXISTS `view_users`;
 
@@ -626,37 +685,37 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`diego_torres`@`localhost` SQL SECURITY DEFIN
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `view_users_x_centers`
+-- Structure for view `view_users_x_centers`
 --
 DROP TABLE IF EXISTS `view_users_x_centers`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`diego_torres`@`localhost` SQL SECURITY DEFINER VIEW `view_users_x_centers`  AS  select `users`.`user_id` AS `user_id`,`users`.`user_name` AS `user_name`,`centers`.`center_id` AS `center_id`,`centers`.`center_name` AS `center_name` from ((`users` join `centers`) join `users_x_centers`) where ((`users`.`user_id` = `users_x_centers`.`users_x_centers_user_id`) and (`users_x_centers`.`users_x_centers_center_id` = `centers`.`center_id`) and (`users`.`purged` = 0)) order by `users`.`user_name`,`centers`.`center_name` ;
 
 --
--- Índices para tablas volcadas
+-- Indexes for dumped tables
 --
 
 --
--- Indices de la tabla `centers`
+-- Indexes for table `centers`
 --
 ALTER TABLE `centers`
   ADD PRIMARY KEY (`center_id`);
 
 --
--- Indices de la tabla `logins`
+-- Indexes for table `logins`
 --
 ALTER TABLE `logins`
   ADD PRIMARY KEY (`login_user_id`,`login_time`),
   ADD UNIQUE KEY `login_id_UNIQUE` (`login_id`);
 
 --
--- Indices de la tabla `testing`
+-- Indexes for table `testing`
 --
 ALTER TABLE `testing`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indices de la tabla `users`
+-- Indexes for table `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`user_id`),
@@ -664,27 +723,27 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `user_documen_UNIQUE` (`user_document`);
 
 --
--- Indices de la tabla `users_x_centers`
+-- Indexes for table `users_x_centers`
 --
 ALTER TABLE `users_x_centers`
   ADD PRIMARY KEY (`users_x_centers_user_id`,`users_x_centers_center_id`),
   ADD KEY `fk_center_id_idx` (`users_x_centers_center_id`);
 
 --
--- AUTO_INCREMENT de las tablas volcadas
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT de la tabla `logins`
+-- AUTO_INCREMENT for table `logins`
 --
 ALTER TABLE `logins`
   MODIFY `login_id` bigint(20) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT COMMENT 'Un indice de secuencia que ayuda a indexar la tabla y a las busquedas de una sesion en particular', AUTO_INCREMENT=95;
 --
--- Restricciones para tablas volcadas
+-- Constraints for dumped tables
 --
 
 --
--- Filtros para la tabla `users_x_centers`
+-- Constraints for table `users_x_centers`
 --
 ALTER TABLE `users_x_centers`
   ADD CONSTRAINT `fk_center_id` FOREIGN KEY (`users_x_centers_center_id`) REFERENCES `centers` (`center_id`) ON DELETE CASCADE ON UPDATE CASCADE,

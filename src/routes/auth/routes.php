@@ -7,5 +7,5 @@ $app->group('/auth', function () use ($app) {
     $this->map(['GET', 'POST', 'DELETE', 'PATCH', 'PUT', 'OPTIONS'], '')->setName('auth');
 
     // Get logging in
-    $this->post('/login/{api_version}', '\AuthController:login')->setName('auth-login');;
+    $this->post('/login/{api_version}', '\AuthController:login')->setName('auth-login');
 });
