@@ -33,12 +33,16 @@ $container['general_config'] = function ($c) {
     return $config;
 };
 
-// joshcamMysqli
+// joshcamMysqli, obtiene una instancia del cliente que se conecta con mysql
 $container['mysqli'] = function ($c) {
+    //Usando el inyector de dependencias obtenemos los datos de conexion mysql desde el config
+    $mysqlConfig = $c->get('general_config')['config']['db']['mysqli'];
+    //Preparamos el array de parametros con los datos de conexion
     $params = [];
-    $params['mysql_server'] = 'localhost';
-    $params['mysql_user'] = 'root';
-    $params['mysql_password'] = 'Colombia2006';
-    $params['mysql_database'] = 'qualisoft_dev';
+    $params['mysql_server'] = $mysqlConfig['mysql_server'];
+    $params['mysql_user'] = $mysqlConfig['mysql_user'];
+    $params['mysql_password'] = $mysqlConfig['mysql_password'];
+    $params['mysql_database'] = $mysqlConfig['mysql_database'];
+    //Retornamos la instancia
     return new JoshcamMysqli($params);
 };
