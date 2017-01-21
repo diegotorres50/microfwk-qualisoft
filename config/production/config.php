@@ -9,7 +9,7 @@ return [
         'config6' => 6000,
         'db' => [
             'mysqli' => [
-                'mysql_server' => 'sg211.servergrove.com',
+                'mysql_server' => 'localhost',
                 'mysql_user' => 'diego_torres',
                 'mysql_password' => 'ku@leezof+2017',
                 'mysql_database' => 'diegotor_qualisoft_prod'
