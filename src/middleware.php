@@ -23,4 +23,4 @@ $app->add(new \Slim\Middleware\HttpBasicAuthentication([
         $data["response"] = $response;
         return $response->write(json_encode($data, JSON_UNESCAPED_SLASHES));
     }
-]));
+]));*/
