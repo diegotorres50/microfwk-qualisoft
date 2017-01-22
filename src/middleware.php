@@ -5,12 +5,16 @@
 
 //En los headers del request hay que autenticar: Authorization:Basic base64_encode("hba_username:hba_password")
 $app->add(new \Slim\Middleware\HttpBasicAuthentication([
-    //"realm" => "Protected",
+    "path" => ["/api", "/admin"],
+    "realm" => "Protected zone for qualisoft",
     "secure" => false,
-    //Estos usuarios salen de .htpasswd
     "users" => [
         getenv('hba_username') => getenv('hba_password'),
+        'root' => '123'
     ],
+    "callback" => function ($request, $response, $arguments) {
+        print_r($arguments);
+    },
     "error" => function ($request, $response, $arguments) {
         $data = [];
         $data["status"] = "error";
@@ -19,6 +23,7 @@ $app->add(new \Slim\Middleware\HttpBasicAuthentication([
         $data["user"] = getenv('hba_username');
         $data["pass"] = getenv('hba_password');
         $data["encode"] = base64_encode(getenv('hba_username') . ':' . getenv('hba_password'));
+        $data["encode2"] = base64_encode("root:123");
         $data["request"] = $request;
         $data["response"] = $response;
         return $response->write(json_encode($data, JSON_UNESCAPED_SLASHES));
