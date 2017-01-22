@@ -22,18 +22,21 @@ $app->group('/api', function () use ($app) {
 
             return $response->withJson($this->general_config, 201);
 
-        });    
+        });
 
         // Prueba con variables de entorno
         $app->get('/getenv', function ($request, $response, $args) {
 
-            return $response->withJson($this->env, 201);    
+            return $response->withJson($this->env, 201);
 
-        }); 
+        });
 
+        // Prueba con variables de entorno
+        $app->get('/getcredentials', function ($request, $response, $args) {
 
+            return $response->withJson($this->http_basic_auth, 201);
 
-
+        });
 
     });
 
