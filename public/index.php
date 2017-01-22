@@ -46,8 +46,13 @@ function autoload( $class, $dir = null ) {
 
 session_start();
 
+// Para obtener las variables de entorno en el archivo .env
 $dotenv = new Dotenv\Dotenv(__DIR__ . '/../');
 $dotenv->load();
+
+// Para obtener las variables de entorno en el archivo .htpasswd
+$dotHttpBasicAuth = new Dotenv\Dotenv(__DIR__ . '/../', '.htpasswd');
+$dotHttpBasicAuth->load();
 
 // Instantiate the app
 

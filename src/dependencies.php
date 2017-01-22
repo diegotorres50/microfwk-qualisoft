@@ -46,3 +46,9 @@ $container['mysqli'] = function ($c) {
     //Retornamos la instancia
     return new JoshcamMysqli($params);
 };
+
+// http basic authentication credentials (inyectamos las credenciales user/pass)
+$container['http_basic_auth'] = function ($c) {
+    $settings = $c->get('settings')['http_basic_auth'];
+    return $settings;
+};
