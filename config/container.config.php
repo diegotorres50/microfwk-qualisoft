@@ -19,6 +19,12 @@ return [
         // Environment var (todas las variables del archivo .env)
         'env' => [
             'environment' => strtolower(getenv('ENVIRONMENT')),
-        ],        
+        ],
+
+        // Environment var (todas las variables del archivo .htpasswd) - http basic authentication credentials (inyectamos las credenciales user/pass)
+        'http_basic_auth' => [
+            'hba_username' => getenv('hba_username'),
+            'hba_password' => getenv('hba_password'),
+        ],
     ],
 ];
